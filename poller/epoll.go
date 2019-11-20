@@ -6,13 +6,13 @@ import (
 
 type (
 	Poll struct {
-		fd      int
-		eventFd int
+		fd        int
+		eventFd   int
+		wakeBytes []byte
 	}
 )
 
 func NewPoll() (*Poll, error) {
-
 	fd, err := unix.EpollCreate1(0)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,13 @@ func NewPoll() (*Poll, error) {
 	}
 
 	return &Poll{
-		fd:      fd,
-		eventFd: eventFd,
+		fd:        fd,
+		eventFd:   eventFd,
+		wakeBytes: []byte{1, 0, 0, 0, 0, 0, 0, 0},
 	}, nil
+}
+
+func (p *Poll) Wake() error {
+	_, err := unix.Write(p.eventFd, p.wakeBytes)
+	return err
 }
